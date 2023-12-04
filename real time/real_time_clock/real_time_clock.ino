@@ -8,6 +8,18 @@ const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 3600 * 7;
 const int   daylightOffset_sec = 3600 * 0;
 
+
+typedef struct
+{
+  uint8_t sec;
+  uint8_t min;
+  uint8_t hour;
+  uint8_t day;
+  uint8_t date;
+  uint8_t month;
+} gio;
+gio Time;
+
 void setup() {
   Serial.begin(115200);
   delay(1000);
@@ -34,6 +46,12 @@ void loop() {
   if (!getLocalTime(&timeinfo)) {
     Serial.println("Failed to obtain time");
   }
+
   Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
+  Time.hour = timeinfo.tm_hour; 
+  Serial.println(Time.hour);
+
+
+
   delay(1000);
 }
