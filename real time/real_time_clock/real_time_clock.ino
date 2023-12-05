@@ -1,8 +1,8 @@
 #include <WiFi.h>
 #include "time.h"
 
-const char* ssid = "Đoàn KA"; // Name of the Wi-Fi box
-const char* password = "hoikhanh"; // MDP of the Wi-Fi box
+const char* ssid = "KS Chuong"; //Enter SSID
+const char* password = "0946627518"; //Enter Password
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 3600 * 7;
