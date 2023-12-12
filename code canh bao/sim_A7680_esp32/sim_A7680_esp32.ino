@@ -6,9 +6,12 @@ const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 3600 * 7;
 const int   daylightOffset_sec = 3600 * 0;
 
+String mumber = "";
+
 
 void get_real_time(void);
 void warning(void);
+void start_up(void);
 
 uint32_t time_millis;
 uint32_t time_warning1;
@@ -18,7 +21,7 @@ uint8_t count_warning1;
 uint8_t count_time;
 uint8_t old_count_time;
 
-uint16_t count_sensor ;
+uint32_t count_sensor ;
 
 typedef struct
 {
@@ -82,6 +85,18 @@ void loop() {
 
 }
 
+/***** ham khoi dong he thong ************/
+void start_up(void)
+{
+  sim_init();
+  BUZZER_ON;
+  mumber = "";
+  mumber = EEPROM_get(ADD_MUM);
+  Serial.println(mumber);
+  sent_sms(mumber, "KHOI DONG HE THONG");
+  BUZZER_OFF;
+}
+
 
 /************* lay thoi gian thuc ************/
 void get_real_time(void)
@@ -113,6 +128,7 @@ void warning(void)
 {
   if (status.sensor == 1 && status.warning == 0)
   {
+    count_sensor = 0;
     status.warning = 1;
   }
   /********** khi bat dau tac dong ***********/
@@ -122,31 +138,93 @@ void warning(void)
     if (millis() - time_warning1 > 1000)
     {
       count_warning1 ++;
-      if(count_warning1 > 9) count_warning1 = 10;
+      if (count_warning1 > 9) count_warning1 = 10;
       time_warning1  = millis();
     }
-    if(count_warning1 == 10)
+    if (count_warning1 == 10)
     {
       Serial.println(count_sensor);
       status.warning = 2;
     }
   }
   /*********** sau 10s tac dong ************/
-  if(status.warning == 2)
+  if (status.warning == 2)
   {
-    if(count_sensor >= LEVEL_RING1) status.warning = 3;
-    else 
+    if (count_sensor >= LEVEL_RING1)
+    {
+      /**** gui tin nhsn khi co tsc dong ***/
+      sent_sms(mumber, "XE CO TAC DONG");
+      /**********************************/
+      status.warning = 3;
+      count_sensor = 0;
+      count_warning1 = 0;
+    }
+    else
     {
       status.warning = 0;
       count_sensor = 0;
+      count_warning1 = 0;
     }
   }
   /********* neu du dieu kien tac dong ******/
-  if(status.warning == 3)
+  if (status.warning == 3)
   {
-    
+    if (status.sensor == 1) count_sensor++;
+    if (millis() - time_warning1 > 1000)
+    {
+      count_warning1 ++;
+      if (count_warning1 > 19) count_warning1 = 20;
+      time_warning1  = millis();
+    }
+    if (count_warning1 == 20)
+    {
+      Serial.println(count_sensor);
+      status.warning = 4;
+    }
+  }
+  if (status.warning == 4)
+  {
+    if (count_sensor >= LEVEL_RING1)
+    {
+      /**** goi dien khi co tac dong ***/
+      sim_call(mumber);
+      /**********************************/
+      status.warning = 5;
+      count_sensor = 0;
+      count_warning1 = 0;
+    }
+    else
+    {
+      status.warning = 0;
+      count_sensor = 0;
+      count_warning1 = 0;
+    }
+  }
+  /******* reset lai trang thai xe dung *****/
+  if (status.warning == 5)
+  {
+    if (status.sensor == 1) count_sensor++;
+    if (millis() - time_warning1 > 1000)
+    {
+      count_warning1 ++;
+      if (count_warning1 > 299) count_warning1 = 300;
+      time_warning1  = millis();
+    }
+    if (count_warning1 == 300)
+    {
+      Serial.println(count_sensor);
+      status.warning = 6;
+    }
+  }
+  if (status.warning == 6)
+  {
+    if (count_sensor <= LEVEL_RING_OFF)
+    {
+      status.warning = 0;
+      count_sensor = 0;
+      count_warning1 = 0;
+    }
   }
 
-  
 
 }
